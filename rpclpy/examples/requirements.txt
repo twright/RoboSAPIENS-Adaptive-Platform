@@ -1,0 +1,9 @@
+"""
+Requirements for the rpclpy library examples.
+Install these packages to run the example nodes.
+"""
+
+# Core dependencies for rpclpy
+redis>=4.0.0
+paho-mqtt>=1.6.0
+PyYAML>=6.0

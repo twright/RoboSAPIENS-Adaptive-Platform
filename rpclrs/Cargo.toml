@@ -1,0 +1,27 @@
+[package]
+name = "rpclrs"
+version = "1.0.0"
+edition = "2021"
+authors = ["RoboSapiens"]
+description = "RoboSapiens Client Library for Rust - Node communication with Redis"
+license = "MIT"
+
+[dependencies]
+redis = "0.23"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+log = "0.4"
+env_logger = "0.10"
+anyhow = "1.0"
+thiserror = "1.0"
+
+[[example]]
+name = "sensor_node"
+path = "examples/sensor_node.rs"
+
+[[example]]
+name = "monitor_node"
+path = "examples/monitor_node.rs"

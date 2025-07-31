@@ -4,9 +4,9 @@ import json
 import uuid
 import pickle
 from datetime import datetime
-from rpio.clientLibraries.rpclpy.CommunicationManager import CommunicationManager
-from rpio.clientLibraries.rpclpy.KnowledgeManager import KnowledgeManager
-from rpio.clientLibraries.rpclpy.LoggingAndTracking import LoggingAndTrackingHandler
+from .CommunicationManager import CommunicationManager
+from .KnowledgeManager import KnowledgeManager
+from .LoggingAndTracking import LoggingAndTrackingHandler
 
 
 # ---------------------------------------------------------------------------
