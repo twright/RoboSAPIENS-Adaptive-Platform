@@ -30,7 +30,13 @@ robosapiens-clientlibraries/
 │   ├── node.py               # Main Node class
 │   ├── CommunicationManager.py # Redis pub/sub handling
 │   ├── KnowledgeManager.py   # Knowledge storage
-│   └── LoggingAndTracking.py # Logging infrastructure
+│   ├── LoggingAndTracking.py # Logging infrastructure
+│   └── examples/             # Python examples
+│       ├── sensor_node.py   # Temperature sensor simulation
+│       ├── monitor_node.py  # Data monitoring and analysis
+│       ├── data_models.py   # Shared data structures
+│       ├── config.yaml      # Configuration example
+│       └── README.md        # Examples documentation
 ├── rpclcpp/                  # C++ library
 │   ├── include/              # Header files
 │   │   ├── node.hpp         # Main Node interface
@@ -48,12 +54,6 @@ robosapiens-clientlibraries/
 │   │   └── knowledge_manager.rs
 │   ├── examples/             # Rust examples
 │   └── Cargo.toml           # Package configuration
-├── examples/                 # Python examples & demos
-│   ├── sensor_node.py       # Temperature sensor simulation
-│   ├── monitor_node.py      # Data monitoring and analysis
-│   ├── data_models.py       # Shared data structures
-│   ├── config.yaml          # Configuration example
-│   └── README.md            # Examples documentation
 ├── .gitignore               # Git ignore patterns
 └── README.md                # This file
 ```
@@ -237,7 +237,7 @@ Recent Alerts (2):
 **Python (Recommended for beginners):**
 
 ```bash
-cd examples
+cd rpclpy/examples
 # Terminal 1 - Start monitoring first
 python monitor_node.py
 
