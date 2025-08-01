@@ -152,7 +152,7 @@ docker run --name redis-server -p 6379:6379 -d redis
 
 ```bash
 cd rpclpy
-pip install redis paho-mqtt PyYAML  # Or use requirements.txt in examples/
+pip install redis paho-mqtt PyYAML  # Install dependencies
 ```
 
 ### C++ Setup (rpclcpp)
@@ -277,7 +277,7 @@ Each library includes a comprehensive test script:
 **Python:**
 
 ```bash
-cd examples
+cd rpclpy/examples
 python run_tests.py  # Automated test suite with Redis setup check
 ```
 
@@ -404,7 +404,7 @@ Each library includes comprehensive examples that test:
 - [Python Library (rpclpy)](./rpclpy/README.md)
 - [C++ Library (rpclcpp)](./rpclcpp/README.md)
 - [Rust Library (rpclrs)](./rpclrs/README.md)
-- [Python Examples](./examples/README.md)
+- [Python Examples](./rpclpy/examples/README.md)
 
 ## 🤝 Contributing
 
