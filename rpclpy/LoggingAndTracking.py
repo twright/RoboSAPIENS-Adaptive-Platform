@@ -26,11 +26,14 @@ class RedisLoggingHandler(logging.Handler):
         super().__init__()
         self.redis_client = redis.Redis(host=host, port=port, decode_responses=True)
         self.channel = channel
+        self.max_logs = 500
 
     def emit(self, record):
         try:
             log_entry = self.format(record)
             self.redis_client.lpush(self.channel, log_entry)
+            # Trim list to keep only the latest logs
+            self.redis_client.ltrim(self.channel, 0, self.max_logs - 1)
         except Exception:
             self.handleError(record)
 

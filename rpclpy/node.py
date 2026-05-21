@@ -4,9 +4,9 @@ import json
 import uuid
 import pickle
 from datetime import datetime
-from .CommunicationManager import CommunicationManager
-from .KnowledgeManager import KnowledgeManager
-from .LoggingAndTracking import LoggingAndTrackingHandler
+from rpclpy.CommunicationManager import CommunicationManager
+from rpclpy.KnowledgeManager import KnowledgeManager
+from rpclpy.LoggingAndTracking import LoggingAndTrackingHandler
 
 
 # ---------------------------------------------------------------------------
@@ -138,12 +138,43 @@ class Node:
 
 
 
-    def publish_message(self, event_key, message=DEFAULT_EVENT_MESSAGE):
-        """Publish Event using the Event manager."""
-        if self.message_manager:
-            self.message_manager.publish(event_key, message)
+    def publish_message(self, message_key, message=DEFAULT_EVENT_MESSAGE):
+        """Publish Message using the Message manager."""
+        if isinstance(message_key, str):
+            # Generate a unique ID for the message
+            message_id = str(uuid.uuid4().hex[:8])
+            # Get the current timestamp in ISO 8601 format
+            timestamp = datetime.now().isoformat()
+            
+            message['uid'] = message_id
+            message['timestamp'] = timestamp
+
+            if self.message_manager:
+                self.message_manager.publish(message_key, json.dumps(message))
+            else:
+                self.logger.warning(WARN_EVENT_MANAGER_NOT_SET)
         else:
-            self.logger.warning(WARN_EVENT_MANAGER_NOT_SET)
+            # Check if message_key is already an instance (has __dict__ attribute)
+            if hasattr(message_key, '__dict__') and hasattr(message_key, 'name'):
+                # It's already an instance, use it directly
+                message_cls = message_key
+            else:
+                # It's a class, instantiate it
+                message_cls = message_key()
+            
+            # Set uid and timestamp
+            message_cls.uid = str(uuid.uuid4().hex[:8])
+            message_cls.timestamp = datetime.now().isoformat()
+            
+            # Serialize and publish
+            value = json.dumps(message_cls.__dict__)
+            
+            if self.message_manager:
+                # Use the topic attribute if available, otherwise use name
+                topic = getattr(message_cls, 'topic', message_cls.name)
+                self.message_manager.publish(topic, value)
+            else:
+                self.logger.warning(WARN_EVENT_MANAGER_NOT_SET)
 
     def register_event_callback(self, event_key, callback):
         """Register a callback for Event manager events (MQTT or Redis)."""
