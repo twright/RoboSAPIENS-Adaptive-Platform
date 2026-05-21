@@ -1,0 +1,247 @@
+Monitor_Config:
+  Logger_Config:
+    log_level: DEBUG
+    logger_type: redis
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    terminal: {}
+    file:
+      filename: MAPLE.log
+    redis:
+      host: localhost
+      port: 6379
+      channel: Monitor:logs
+  knowledgeIn:
+    properties: null
+  knowledgeOut:
+    properties: null
+  eventIn:
+    properties:
+    - property:
+        type: event
+        name: HumanStatus
+        class: '-'
+        topic: /HumanStatus
+        QoS: 10
+  eventOut:
+    properties:
+    - property:
+        type: event
+        name: new_data
+        class: '-'
+        topic: /new_data
+        QoS: 10
+  Event_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Message_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Knowledge_Config:
+    knowledge_type: redis
+    host: localhost
+    port: 6379
+    db: 0
+
+Analysis_Config:
+  Logger_Config:
+    log_level: DEBUG
+    logger_type: redis
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    terminal: {}
+    file:
+      filename: MAPLE.log
+    redis:
+      host: localhost
+      port: 6379
+      channel: Analysis:logs
+  knowledgeIn:
+    properties: null
+  knowledgeOut:
+    properties: null
+  eventIn:
+    properties:
+    - property:
+        type: event
+        name: new_data
+        class: '-'
+        topic: /new_data
+        QoS: 10
+  eventOut:
+    properties:
+    - property:
+        type: event
+        name: anomaly
+        class: '-'
+        topic: /anomaly
+        QoS: 10
+  Event_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Message_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Knowledge_Config:
+    knowledge_type: redis
+    host: localhost
+    port: 6379
+    db: 0
+
+Plan_Config:
+  Logger_Config:
+    log_level: DEBUG
+    logger_type: redis
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    terminal: {}
+    file:
+      filename: MAPLE.log
+    redis:
+      host: localhost
+      port: 6379
+      channel: Plan:logs
+  knowledgeIn:
+    properties: null
+  knowledgeOut:
+    properties:
+    - property:
+        type: data
+        name: new_plan
+        class: new_plan
+        topic: /new_plan
+        QoS: 10
+  eventIn:
+    properties:
+    - property:
+        type: event
+        name: anomaly
+        class: '-'
+        topic: /anomaly
+        QoS: 10
+  eventOut:
+    properties:
+    - property:
+        type: event
+        name: new_plan
+        class: '-'
+        topic: /new_plan
+        QoS: 10
+  Event_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Message_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Knowledge_Config:
+    knowledge_type: redis
+    host: localhost
+    port: 6379
+    db: 0
+
+Legitimate_Config:
+  Logger_Config:
+    log_level: DEBUG
+    logger_type: redis
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    terminal: {}
+    file:
+      filename: MAPLE.log
+    redis:
+      host: localhost
+      port: 6379
+      channel: Legitimate:logs
+  knowledgeIn:
+    properties: null
+  knowledgeOut:
+    properties: null
+  eventIn:
+    properties:
+    - property:
+        type: event
+        name: new_plan
+        class: '-'
+        topic: /new_plan
+        QoS: 10
+  eventOut:
+    properties:
+    - property:
+        type: event
+        name: isLegit
+        class: '-'
+        topic: /isLegit
+        QoS: 10
+    - property:
+        type: event
+        name: anomaly
+        class: '-'
+        topic: /anomaly
+        QoS: 10
+  Event_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Message_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Knowledge_Config:
+    knowledge_type: redis
+    host: localhost
+    port: 6379
+    db: 0
+
+Execute_Config:
+  Logger_Config:
+    log_level: DEBUG
+    logger_type: redis
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    terminal: {}
+    file:
+      filename: MAPLE.log
+    redis:
+      host: localhost
+      port: 6379
+      channel: Execute:logs
+  knowledgeIn:
+    properties: null
+  knowledgeOut:
+    properties:
+    - property:
+        type: data
+        name: NewWaypoint
+        class: NewWaypoint
+        topic: /NewWaypoint
+        QoS: 10
+  eventIn:
+    properties:
+    - property:
+        type: event
+        name: isLegit
+        class: '-'
+        topic: /isLegit
+        QoS: 10
+  eventOut:
+    properties:
+    - property:
+        type: event
+        name: NewWaypoint
+        class: '-'
+        topic: /NewWaypoint
+        QoS: 10
+  Event_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Message_Manager_Config:
+    protocol: redis
+    host: localhost
+    port: 6379
+  Knowledge_Config:
+    knowledge_type: redis
+    host: localhost
+    port: 6379
+    db: 0

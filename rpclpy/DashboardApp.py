@@ -1247,8 +1247,7 @@ def run_dashboard(host=None, port=None, debug=False, start_trust=True):
     if start_trust:
         _start_trust_thread_once()
     logger.info(f"Starting Dash server on {dash_host}:{dash_port} (debug={debug})")
-    # use run_server (recommended for Dash)
-    app.run_server(host=dash_host, port=dash_port, debug=debug)
+    app.run(host=dash_host, port=dash_port, debug=debug)
 
 if __name__ == '__main__':
     # keep existing behavior but delegate to run_dashboard
