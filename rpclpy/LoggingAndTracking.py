@@ -1,10 +1,13 @@
 import logging
 import redis
-import paho.mqtt.client as mqtt
 
 # Custom logging handler for MQTT.
 class MQTTLoggingHandler(logging.Handler):
     def __init__(self, broker='localhost', port=1883, topic='logs'):
+        try:
+            import paho.mqtt.client as mqtt
+        except ImportError:
+            raise ImportError("paho-mqtt is required for MQTT logging. Install it with: pip install paho-mqtt")
         super().__init__()
         self.topic = topic
         self.client = mqtt.Client()
