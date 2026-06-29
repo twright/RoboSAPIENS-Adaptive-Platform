@@ -1,10 +1,41 @@
-# rpclpy — RoboSapiens Python Client Library
+# RoboSAPIENS Adaptive Platform (RAP)
 
-A high-performance Python library for building distributed node-based systems with communication, events, and knowledge management capabilities, backed by Redis.
+The **RoboSAPIENS Adaptive Platform (RAP)** is a middleware framework for building self-adaptive robotic systems. It provides a structured runtime for implementing the **MAPLE-K** (Monitor, Analysis, Plan, Legitimate, Execute – Knowledge) autonomic control loop, enabling robotic applications to continuously observe their environment, reason about their state, and adapt their behavior at runtime — without human intervention.
+
+RAP is developed as part of the [RoboSAPIENS](https://robosapiens-eu.tech/) project, a European research initiative focused on trustworthy and self-adaptive human-robot systems. It is designed to be use-case agnostic: the same platform powers different RoboSAPIENS applications, from swarm robotics to human-robot collaboration scenarios.
+
+---
+
+## rpclpy — Python Client Library for RAP
+
+**rpclpy** is the official Python client library for RAP. It gives developers the building blocks to implement MAPLE-K loop nodes as distributed Python processes that communicate via events and messages, and share context through a common Knowledge base.
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![Redis](https://img.shields.io/badge/Redis-6.0+-red.svg)](https://redis.io)
 [![PyPI](https://img.shields.io/pypi/v/rpclpy.svg)](https://pypi.org/project/rpclpy/)
+
+## MAPLE-K Loop in RoboSAPIENS
+
+```sh
+
+```
+```raw
+┌──────────────────────────────────────────────────────────────────┐
+│                     MAPLE-K Loop (RAP)                           │
+│                                                                  │
+│   ┌─────────┐   ┌─────────┐   ┌──────┐   ┌───────────┐          │
+│   │ Monitor │──►│Analysis │──►│ Plan │──►│ Legitimate │──┐       │
+│   └─────────┘   └─────────┘   └──────┘   └───────────┘  │       │
+│        ▲                                                  ▼       │
+│        │                                           ┌─────────┐   │
+│        └───────────────────────────────────────────│ Execute │   │
+│                                                    └─────────┘   │
+│                                                                  │
+│  ─────────────────────── Knowledge ──────────────────────────    │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+Each MAPLE-K element runs as an independent **Node** built with rpclpy. Nodes share state via the **Knowledge** layer, and coordinate transitions via **Events** and **Messages** — all managed through a distributed, multi-protocol communication backend.
 
 ## Features
 
@@ -37,7 +68,7 @@ pip install rpclpy[all]        # Everything
 
 ## Repository Structure
 
-```
+```raw
 rpclpy/
 ├── __init__.py               # Library entry point
 ├── node.py                   # Main Node class
@@ -46,29 +77,6 @@ rpclpy/
 ├── LoggingAndTracking.py     # Logging infrastructure
 ├── DashboardApp.py           # Web monitoring dashboard
 └── utils.py                  # Utility decorators
-```
-
-## Quick Start
-
-```python
-from rpclpy.node import Node
-import yaml
-
-with open('config.yaml', 'r') as f:
-    config = yaml.safe_load(f)
-
-node = Node(config)
-node.start()
-
-# Publish an event
-node.publish_event("sensor/data", {"temperature": 22.5})
-
-# Subscribe to events
-node.register_event_callback("alerts/high", handle_alert)
-
-# Read / write knowledge
-node.write_knowledge("last_reading", {"value": 22.5})
-data = node.read_knowledge("last_reading")
 ```
 
 ## Prerequisites
@@ -139,55 +147,27 @@ Knowledge_Config:
 
 ## Architecture
 
-```
-┌─────────────┐    Events/Messages    ┌─────────────┐
-│  Your Node  │◄─────────────────────►│  Other Node │
-└─────────────┘       Real-time       └─────────────┘
-       │              Communication           │
-       ▼                                     ▼
-┌─────────────────────────────────────────────────────┐
-│                    Redis Backend                    │
-│  ┌─────────┐  ┌─────────┐  ┌─────────────────────┐  │
-│  │ Events  │  │Messages │  │   Knowledge Base    │  │
-│  │ (DB 0)  │  │ (DB 1)  │  │      (DB 2)         │  │
-│  │ Pub/Sub │  │ Pub/Sub │  │    Key-Value        │  │
-│  └─────────┘  └─────────┘  └─────────────────────┘  │
-└─────────────────────────────────────────────────────┘
-```
+Each node in the MAPLE-K loop is a separate rpclpy `Node` instance. They communicate in real time and share knowledge through a distributed backend.
 
-## Examples
+```raw
+  MAPLE-K Nodes (each is an rpclpy Node)
 
-### Sensor Monitoring System
-
-The repository includes a complete real-time sensor monitoring example:
-
-```bash
-cd rpclpy/examples
-
-# Terminal 1 — start the monitor
-python monitor_node.py
-
-# Terminal 2 — start the sensor
-python sensor_node.py
-```
-
-Output:
-
-```
-SENSOR MONITORING STATUS
-============================================================
-Active Sensors: 1
-Total Readings: 47
-Alert Count: 3
-Average Temperature: 23.2°C
-
-Sensor Details:
-  TEMP_001: 24.1°C [normal] at Lab Room A
-
-Recent Alerts (2):
-  [HIGH] Temperature too high: 31.2°C at Lab Room A
-  [MEDIUM] Temperature outside normal range: 27.8°C at Lab Room A
-------------------------------------------------------------
+┌──────────┐  ┌──────────┐  ┌──────┐  ┌───────────┐  ┌─────────┐
+│ Monitor  │  │ Analysis │  │ Plan │  │ Legislate │  │ Execute │
+└────┬─────┘  └────┬─────┘  └──┬───┘  └─────┬─────┘  └────┬────┘
+     │              │           │             │              │
+     └──────────────┴───────────┴─────────────┴──────────────┘
+                              Events / Messages
+                                    │
+                                    ▼
+          ┌─────────────────────────────────────────────┐
+          │               RAP Backend                   │
+          │  ┌─────────┐  ┌─────────┐  ┌─────────────┐  │
+          │  │ Events  │  │Messages │  │  Knowledge  │  │
+          │  │ (DB 0)  │  │ (DB 1)  │  │   (DB 2)    │  │
+          │  │ Pub/Sub │  │ Pub/Sub │  │  Key-Value  │  │
+          │  └─────────┘  └─────────┘  └─────────────┘  │
+          └─────────────────────────────────────────────┘
 ```
 
 ## Troubleshooting
@@ -205,22 +185,6 @@ brew services start redis           # macOS
 python -c "import rpclpy; print(rpclpy.__version__)"
 ```
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Set up the dev environment:
-   ```bash
-   docker run --name redis-dev -p 6379:6379 -d redis
-   pip install -e ".[all]"
-   ```
-4. Follow PEP 8 style
-5. Submit a pull request with a clear description
-
-## License
-
-MIT License
-
 ## Version
 
 **Current version: 1.0.0**
@@ -236,6 +200,6 @@ MIT License
 
 ---
 
-**Built with ❤️ by the RoboSapiens Team**
+**Built with ❤️ by the RoboSAPIENS Team**
 
 For questions, support, or contributions, visit the [GitHub repository](https://github.com/saharnn96/robosapiens-clientlibraries).
