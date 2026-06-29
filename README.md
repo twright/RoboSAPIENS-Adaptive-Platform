@@ -170,6 +170,25 @@ Each node in the MAPLE-K loop is a separate rpclpy `Node` instance. They communi
           └─────────────────────────────────────────────┘
 ```
 
+## Use Cases — RAP Integration
+
+### 1. PAL Robotics
+
+- [pal_maple-k_demo](https://gitlab.com/pal-robotics/robosapiens/pal_maple-k_demo)
+- [pal_fleet](https://gitlab.com/pal-robotics/robosapiens/pal_fleet)
+
+### 2. NTNU Ship Navigation
+
+- [rpio-ShipNavigation](https://github.com/saharnn96/rpio-ShipNavigation)
+
+### 3. DTI Screw Detection
+
+- [screw_detection](https://github.com/TI-RoboSapiens/screw_detection)
+
+### 4. TurtleBot
+
+---
+
 ## Troubleshooting
 
 **Redis connection failed:**
@@ -203,3 +222,13 @@ python -c "import rpclpy; print(rpclpy.__version__)"
 **Built with ❤️ by the RoboSAPIENS Team**
 
 For questions, support, or contributions, visit the [GitHub repository](https://github.com/saharnn96/robosapiens-clientlibraries).
+
+---
+
+## License
+
+This software is owned by [The INTO-CPS Association](https://into-cps.org/) and is available under [the INTO-CPS License](./LICENSE.md).
+
+Please see [third-party](docs/third-party.md) for details of the third-party software included in the DTaaS.
+
+

@@ -79,12 +79,12 @@ class Monitor(Node):
         #
         # in_planning_obj = self.read_knowledge(InPlanning)
         # if not in_planning_obj.in_planning:
-        #     self.publish_event(event_key='new_data')
+        #     self.publish_event(event_key='observation_recorded')
         pass
 
     def register_callbacks(self):
-        # TODO: replace 'SensorData' with your incoming event / topic name
-        self.register_event_callback(event_key='SensorData', callback=self.monitor)
+        # TODO: replace 'sensor_data_received' with your incoming event / topic name
+        self.register_event_callback(event_key='sensor_data_received', callback=self.monitor)
 
 
 class Analysis(Node):
@@ -124,11 +124,11 @@ class Analysis(Node):
         #         _abnormal_start_idx.abnormal_start_idx = len(ratio_list) - detect_window_size
         #         self.write_knowledge(_abnormal_start_idx)
         #
-        #         self.publish_event(event_key='anomaly')
+        #         self.publish_event(event_key='anomaly_detected')
         pass
 
     def register_callbacks(self):
-        self.register_event_callback(event_key='new_data', callback=self.analysis)
+        self.register_event_callback(event_key='observation_recorded', callback=self.analysis)
 
 
 class Plan(Node):
@@ -167,11 +167,12 @@ class Plan(Node):
         #     else:
         #         time.sleep(1)
         #
-        # self.publish_event(event_key='new_plan')
+        # self.publish_event(event_key='plan_generated')
         pass
 
     def register_callbacks(self):
-        self.register_event_callback(event_key='anomaly', callback=self.planner)
+        self.register_event_callback(event_key='anomaly_detected', callback=self.planner)
+        self.register_event_callback(event_key='plan_rejected', callback=self.planner)
 
 
 class Legitimate(Node):
@@ -212,7 +213,7 @@ class Legitimate(Node):
         #     _rc = ReplanningCounter()
         #     _rc.replanning_counter = replanning_counter + 1
         #     self.write_knowledge(_rc)
-        #     self.publish_event(event_key='anomaly')
+        #     self.publish_event(event_key='plan_rejected')
         # else:
         #     _rc = ReplanningCounter()
         #     _rc.replanning_counter = 0
@@ -220,11 +221,11 @@ class Legitimate(Node):
         #     _asi = AbnormalStartIdx()
         #     _asi.abnormal_start_idx = None
         #     self.write_knowledge(_asi)
-        #     self.publish_event(event_key='isLegit')
+        #     self.publish_event(event_key='plan_validated')
         pass
 
     def register_callbacks(self):
-        self.register_event_callback(event_key='new_plan', callback=self.legitimizer)
+        self.register_event_callback(event_key='plan_generated', callback=self.legitimizer)
 
 
 class Execute(Node):
@@ -243,6 +244,7 @@ class Execute(Node):
           1. Read the validated plan / model from knowledge or disk.
           2. Deploy it to the target system (e.g., swap model files, update parameters).
           3. Reset InPlanning to False so monitoring resumes normally.
+          4. Publish 'plan_executed' to signal completion downstream.
         """
         # TODO: implement execution logic, e.g.:
         #
@@ -251,10 +253,12 @@ class Execute(Node):
         # _in_planning = InPlanning()
         # _in_planning.in_planning = False
         # self.write_knowledge(_in_planning)
+        #
+        # self.publish_event(event_key='plan_executed')
         pass
 
     def register_callbacks(self):
-        self.register_event_callback(event_key='isLegit', callback=self.executer)
+        self.register_event_callback(event_key='plan_validated', callback=self.executer)
 
 
 def main(args=None):
