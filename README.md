@@ -229,6 +229,5 @@ For questions, support, or contributions, visit the [GitHub repository](https://
 
 This software is owned by [The INTO-CPS Association](https://into-cps.org/) and is available under [the INTO-CPS License](./LICENSE.md).
 
-Please see [third-party](docs/third-party.md) for details of the third-party software included in the DTaaS.
 
 
