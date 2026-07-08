@@ -23,7 +23,6 @@ KEY_PROTOCOL = "protocol"
 # ---------------------------------------------------------------------------
 # Default Values and Messages
 # ---------------------------------------------------------------------------
-DEFAULT_EVENT_MESSAGE = {}
 ENCODING_UTF8 = "utf-8"
 
 WARN_EVENT_MANAGER_NOT_SET = "Event manager is not set for Event publishing."
@@ -114,17 +113,20 @@ class Node:
             self.message_manager.stop()
             
 
-    def publish_event(self, event_key, message=DEFAULT_EVENT_MESSAGE):
+    def publish_event(self, event_key, message=None):
         """Publish Event using the Event manager."""
         if isinstance(event_key, str):
+            # Copy so the caller's dict is not mutated and no state is shared
+            # between calls.
+            message = dict(message) if message else {}
             # Generate a unique ID for the message
             message_id = str(uuid.uuid4().hex[:8])
             # Get the current timestamp in ISO 8601 format
             timestamp = datetime.now().isoformat()
-            
+
             message['uid'] = message_id
             message['timestamp'] = timestamp
-        
+
             if self.event_manager:
                 self.event_manager.publish(event_key,  json.dumps(message))
             else:
@@ -138,14 +140,17 @@ class Node:
 
 
 
-    def publish_message(self, message_key, message=DEFAULT_EVENT_MESSAGE):
+    def publish_message(self, message_key, message=None):
         """Publish Message using the Message manager."""
         if isinstance(message_key, str):
+            # Copy so the caller's dict is not mutated and no state is shared
+            # between calls.
+            message = dict(message) if message else {}
             # Generate a unique ID for the message
             message_id = str(uuid.uuid4().hex[:8])
             # Get the current timestamp in ISO 8601 format
             timestamp = datetime.now().isoformat()
-            
+
             message['uid'] = message_id
             message['timestamp'] = timestamp
 

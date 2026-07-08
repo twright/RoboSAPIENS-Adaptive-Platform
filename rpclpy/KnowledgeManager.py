@@ -19,6 +19,7 @@ BACKEND_TARANTOOL = "tarantool"
 BACKEND_AEROSPIKE = "aerospike"
 BACKEND_KAFKA = "kafka"
 BACKEND_SQLITE = "sqlite"
+BACKEND_LOCAL = "local"
 
 # Constants for SQLite queries and in-memory DB
 SQLITE_MEMORY = ":memory:"
@@ -35,6 +36,18 @@ AEROSPIKE_VALUE_FIELD = "value"
 # Helper function to generate random strings (if needed)
 def random_string(length=10):
     return ''.join(random.choice(string.ascii_letters) for _ in range(length))
+
+
+# Process-global stores for the 'local' backend, keyed by db number so the
+# config can mirror the Redis db layout (events/messages/knowledge). Shared
+# by every KnowledgeManager in the process, the same way a Redis db is
+# shared by every node connecting to it.
+_LOCAL_STORES = {}
+
+
+def reset_local_stores():
+    """Drop all in-process knowledge stores (mainly for tests)."""
+    _LOCAL_STORES.clear()
 
 
 class KnowledgeManager:
@@ -82,6 +95,8 @@ class KnowledgeManager:
             self.conn = sqlite3.connect(SQLITE_MEMORY)
             self.cursor = self.conn.cursor()
             self.cursor.execute(SQLITE_CREATE_TABLE)
+        elif self.backend == BACKEND_LOCAL:
+            self._store = _LOCAL_STORES.setdefault(config.get(KEY_DB, 0), {})
         else:
             raise ValueError(ERROR_UNSUPPORTED_BACKEND.format(self.backend))
 
@@ -115,6 +130,13 @@ class KnowledgeManager:
             except Exception as e:
                 self.conn.rollback()
                 return False
+        elif self.backend == BACKEND_LOCAL:
+            # Store bytes, exactly like Redis does, so that Node's
+            # decode/deserialize paths behave identically on both backends.
+            if not isinstance(value, bytes):
+                value = str(value).encode()
+            self._store[key] = value
+            return True
 
     def read(self, key, queueSize=1):
         """Read the value for a given key from the backend."""
@@ -146,6 +168,8 @@ class KnowledgeManager:
             self.cursor.execute(SQLITE_SELECT_VALUE, (key,))
             row = self.cursor.fetchone()
             return row[0] if row else None
+        elif self.backend == BACKEND_LOCAL:
+            return self._store.get(key)
 
     def delete(self, key):
         """Delete the key-value pair identified by key from the backend."""
@@ -173,6 +197,8 @@ class KnowledgeManager:
             self.cursor.execute(SQLITE_DELETE_KEY, (key,))
             self.conn.commit()
             return True
+        elif self.backend == BACKEND_LOCAL:
+            return 1 if self._store.pop(key, None) is not None else 0
 
     def exists(self, key):
         """Check whether a key exists in the backend."""
@@ -201,6 +227,8 @@ class KnowledgeManager:
         elif self.backend == BACKEND_SQLITE:
             self.cursor.execute('SELECT 1 FROM kv WHERE key=?', (key,))
             return self.cursor.fetchone() is not None
+        elif self.backend == BACKEND_LOCAL:
+            return key in self._store
 
 
 def benchmark_operations(backend, config, num_operations=1000):

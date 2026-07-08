@@ -12,12 +12,16 @@ PROTOCOL_ZENOH = "zenoh"
 PROTOCOL_WEBSOCKET = "websocket"
 PROTOCOL_TCP = "tcp"
 PROTOCOL_TCP_ALT = "tcp/ip"
+PROTOCOL_LOCAL = "local"
 
 KEY_BROKER = "broker"
 KEY_PORT = "port"
 KEY_HOST = "host"
 KEY_BOOTSTRAP_SERVERS = "bootstrap_servers"
 KEY_URL = "url"
+KEY_BUS = "bus"
+
+DEFAULT_BUS_NAME = "default"
 
 TEST_TOPIC = "test/topic"
 DEFAULT_PUBLISH_MESSAGE = "Hello, world!"
@@ -29,6 +33,51 @@ WS_NOT_ESTABLISHED = "WebSocket connection not established"
 WS_ERROR_PREFIX = "WebSocket error:"
 WS_CLOSED_PREFIX = "WebSocket closed"
 TCP_RECEIVE_ERROR = "TCP receiving error: {}"
+
+class LocalBus:
+    """In-process pub/sub bus shared by all 'local' CommunicationManagers.
+
+    Enables running every node of a MAPLE-K loop in a single process with no
+    external broker: nodes configured with ``protocol: "local"`` publish and
+    subscribe on a named, process-global bus. Delivery is SYNCHRONOUS —
+    ``publish()`` invokes every registered callback inline, on the caller's
+    stack — so a single trigger drives the whole loop to completion before
+    returning. With a networked protocol the same chain runs asynchronously
+    across processes; the per-node logic is identical.
+    """
+
+    _buses = {}
+
+    @classmethod
+    def get(cls, name=DEFAULT_BUS_NAME):
+        """Return (creating if needed) the process-global bus with this name."""
+        return cls._buses.setdefault(name, cls())
+
+    @classmethod
+    def reset(cls):
+        """Drop all buses and their subscriptions (mainly for tests)."""
+        cls._buses.clear()
+
+    def __init__(self):
+        self._subscribers = {}  # topic -> list[callback]
+        self._lock = threading.Lock()
+
+    def subscribe(self, topic, callback):
+        with self._lock:
+            self._subscribers.setdefault(topic, []).append(callback)
+
+    def unsubscribe(self, topic, callback):
+        with self._lock:
+            callbacks = self._subscribers.get(topic, [])
+            if callback in callbacks:
+                callbacks.remove(callback)
+
+    def publish(self, topic, message):
+        with self._lock:
+            callbacks = list(self._subscribers.get(topic, []))
+        for callback in callbacks:
+            callback(message)
+
 
 class CommunicationManager:
     def __init__(self, config):
@@ -79,6 +128,9 @@ class CommunicationManager:
             # Using already imported socket module.
             self._tcp_socket = None
             self._tcp_thread = None
+        elif self.protocol == PROTOCOL_LOCAL:
+            self._local_bus = None
+            self._local_dispatchers = {}  # topic -> dispatch registered on the bus
         else:
             raise ValueError(WARNING_UNSUPPORTED_PROTOCOL.format(self.protocol))
 
@@ -98,6 +150,8 @@ class CommunicationManager:
             self._start_websocket()
         elif self.protocol in [PROTOCOL_TCP, PROTOCOL_TCP_ALT]:
             self._start_tcp()
+        elif self.protocol == PROTOCOL_LOCAL:
+            self._start_local()
         else:
             raise ValueError(WARNING_UNSUPPORTED_PROTOCOL.format(self.protocol))
 
@@ -236,6 +290,23 @@ class CommunicationManager:
         self._tcp_thread = threading.Thread(target=listen_tcp, daemon=True)
         self._tcp_thread.start()
 
+    def _start_local(self):
+        self._local_bus = LocalBus.get(self.config.get(KEY_BUS, DEFAULT_BUS_NAME))
+        for topic in self.subscribe_topics:
+            self._register_local_dispatch(topic)
+
+    def _register_local_dispatch(self, topic):
+        if topic in self._local_dispatchers:
+            return
+        def dispatch(message, topic=topic):
+            # Look up the callback at delivery time so that re-registering a
+            # callback for the topic takes effect immediately.
+            callback = self.event_callbacks.get(topic)
+            if callback:
+                callback(message)
+        self._local_bus.subscribe(topic, dispatch)
+        self._local_dispatchers[topic] = dispatch
+
     def subscribe(self, topic, callback):
         """Register a callback for the given topic."""
         if topic not in self.subscribe_topics:
@@ -256,6 +327,8 @@ class CommunicationManager:
                 payload = sample.payload.decode() if isinstance(sample.payload, bytes) else sample.payload
                 self.event_callbacks[topic](payload)
             self._zenoh_session.declare_subscriber(topic, zenoh_callback)
+        elif self.protocol == PROTOCOL_LOCAL and self._local_bus:
+            self._register_local_dispatch(topic)
         # For Kafka, WebSocket, and TCP dynamic subscription is not handled
 
     def publish(self, topic, message=DEFAULT_PUBLISH_MESSAGE):
@@ -290,6 +363,9 @@ class CommunicationManager:
             send_message = f"{topic}: {message}\n"
             self._tcp_socket.sendall(send_message.encode())
             return f"Published to {topic}: {message}"
+        elif self.protocol == PROTOCOL_LOCAL and self._local_bus:
+            self._local_bus.publish(topic, message)
+            return f"Published to {topic}: {message}"
         else:
             raise RuntimeError("Client not started or unsupported protocol for publishing.")
 
@@ -313,6 +389,11 @@ class CommunicationManager:
                 self._websocket_thread.join(timeout=1)
         elif self.protocol in [PROTOCOL_TCP, PROTOCOL_TCP_ALT] and self._tcp_socket:
             self._tcp_socket.close()
+        elif self.protocol == PROTOCOL_LOCAL and self._local_bus:
+            for topic, dispatch in self._local_dispatchers.items():
+                self._local_bus.unsubscribe(topic, dispatch)
+            self._local_dispatchers.clear()
+            self._local_bus = None
         if self._consumer_thread:
             self._consumer_thread.join(timeout=1)
 

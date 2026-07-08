@@ -131,6 +131,32 @@ Knowledge_Config:
   db: 2
 ```
 
+### Local (in-process) mode — no broker required
+
+For simulation, testing, or single-process deployments you can run an entire
+MAPLE-K loop without Redis (or any other broker) by selecting the `local`
+backend. All nodes in the process then share a global in-memory event bus and
+knowledge store. Event delivery is **synchronous**: publishing an event invokes
+the subscribed callbacks inline, so a single trigger drives the whole loop to
+completion before returning. Application code is unchanged — only the config
+differs:
+
+```yaml
+Logger_Config:
+  log_level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  logger_type: "terminal"
+
+Event_Manager_Config:
+  protocol: "local"
+
+Message_Manager_Config:
+  protocol: "local"
+
+Knowledge_Config:
+  knowledge_type: "local"
+```
+
 ## API Reference
 
 | Method | Description |
