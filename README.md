@@ -10,7 +10,7 @@ RAP is developed as part of the [RoboSAPIENS](https://robosapiens-eu.tech/) proj
 
 **rpclpy** is the official Python client library for RAP. It gives developers the building blocks to implement MAPLE-K loop nodes as distributed Python processes that communicate via events and messages, and share context through a common Knowledge base.
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 [![Redis](https://img.shields.io/badge/Redis-6.0+-red.svg)](https://redis.io)
 [![PyPI](https://img.shields.io/pypi/v/rpclpy.svg)](https://pypi.org/project/rpclpy/)
 
@@ -77,11 +77,12 @@ rpclpy/
 ├── LoggingAndTracking.py     # Logging infrastructure
 ├── DashboardApp.py           # Web monitoring dashboard
 └── utils.py                  # Utility decorators
+rpio_observation/             # Optional reference journals (see its README)
 ```
 
 ## Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - Redis 6.0+ running on localhost:6379
 
 **Install Redis:**
@@ -170,6 +171,21 @@ Knowledge_Config:
 | `node.register_message_callback(topic, fn)` | Subscribe to a message topic |
 | `node.write_knowledge(key, value)` | Store a value |
 | `node.read_knowledge(key)` | Retrieve a value |
+
+### Optional reference journals
+
+A node whose configuration contains `Observation_Config` records callbacks,
+typed Knowledge access, publications and service milestones for runtime
+verification. Phase facts and immutable Knowledge commits use separate journals;
+a callback Write and its Knowledge commit are admitted atomically. Neither
+journal is trimmed during a run. Business code keeps the APIs above.
+Publications accept `evidence=`, and `node.service_started` /
+`node.service_completed` record service milestones. The `node.observation_failed`
+property reports an observation or callback failure. See
+[`rpio_observation/README.md`](rpio_observation/README.md) for configuration,
+run/capture lifecycle and failure semantics. Without `Observation_Config`
+behaviour is unchanged, except that reading a typed Knowledge object that was
+never written returns `None` instead of failing.
 
 ## Architecture
 
